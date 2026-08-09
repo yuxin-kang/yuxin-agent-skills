@@ -1,0 +1,4 @@
+interface:
+  display_name: "Experiment Record"
+  short_description: "Record Play results with run evidence"
+  default_prompt: "Use $experiment-record to record my reported Play result for a specified training run and compare it with the prior baseline."
