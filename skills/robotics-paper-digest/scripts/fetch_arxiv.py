@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import email.utils
+import http.client
 import json
 import re
 import time
@@ -17,7 +19,12 @@ from typing import Any
 
 
 ARXIV_API = "https://export.arxiv.org/api/query"
+ARXIV_RSS = "https://rss.arxiv.org/rss"
 ATOM = {"atom": "http://www.w3.org/2005/Atom"}
+RSS = {
+    "arxiv": "http://arxiv.org/schemas/atom",
+    "dc": "http://purl.org/dc/elements/1.1/",
+}
 USER_AGENT = "yuxin-agent-skills/robotics-paper-digest (+https://github.com/yuxin-kang/yuxin-agent-skills)"
 
 
@@ -48,8 +55,7 @@ def parse_timestamp(value: str) -> dt.datetime:
     return dt.datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(dt.timezone.utc)
 
 
-def parse_feed(payload: bytes) -> list[dict[str, Any]]:
-    root = ET.fromstring(payload)
+def parse_atom(root: ET.Element) -> list[dict[str, Any]]:
     papers: list[dict[str, Any]] = []
     for entry in root.findall("atom:entry", ATOM):
         entry_url = normalize_space(entry.findtext("atom:id", default="", namespaces=ATOM))
@@ -77,9 +83,64 @@ def parse_feed(payload: bytes) -> list[dict[str, Any]]:
     return papers
 
 
-def fetch_feed(query: str, max_results: int, feed_file: Path | None) -> bytes:
+def parse_rss(root: ET.Element) -> list[dict[str, Any]]:
+    papers: list[dict[str, Any]] = []
+    for item in root.findall("./channel/item"):
+        url = normalize_space(item.findtext("link", default=""))
+        published_raw = normalize_space(item.findtext("pubDate", default=""))
+        published = email.utils.parsedate_to_datetime(published_raw).astimezone(dt.timezone.utc).isoformat()
+        description = normalize_space(item.findtext("description", default=""))
+        abstract = re.sub(
+            r"^arXiv:\S+\s+Announce Type:\s+\S+\s+Abstract:\s*", "", description, flags=re.IGNORECASE
+        )
+        creator = normalize_space(item.findtext("dc:creator", default="", namespaces=RSS))
+        arxiv_id = stable_arxiv_id(url)
+        papers.append(
+            {
+                "arxiv_id": arxiv_id,
+                "title": normalize_space(item.findtext("title", default="")),
+                "abstract": abstract,
+                "authors": [normalize_space(author) for author in creator.split(",") if normalize_space(author)],
+                "published": published,
+                "updated": published,
+                "categories": [node.text or "" for node in item.findall("category")],
+                "url": url,
+                "pdf_url": f"https://arxiv.org/pdf/{arxiv_id}",
+            }
+        )
+    return papers
+
+
+def parse_feed(payload: bytes) -> list[dict[str, Any]]:
+    root = ET.fromstring(payload)
+    if root.tag == "rss":
+        return parse_rss(root)
+    return parse_atom(root)
+
+
+def download(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                return response.read()
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            if exc.code == 429:
+                break
+            if attempt < 2:
+                time.sleep(2**attempt)
+        except (http.client.IncompleteRead, urllib.error.URLError, TimeoutError) as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(2**attempt)
+    raise RuntimeError(f"request failed: {last_error}")
+
+
+def fetch_feed(query: str, max_results: int, feed_file: Path | None) -> tuple[bytes, str]:
     if feed_file:
-        return feed_file.read_bytes()
+        return feed_file.read_bytes(), "local fixture"
     params = urllib.parse.urlencode(
         {
             "search_query": query,
@@ -89,17 +150,17 @@ def fetch_feed(query: str, max_results: int, feed_file: Path | None) -> bytes:
             "sortOrder": "descending",
         }
     )
-    request = urllib.request.Request(f"{ARXIV_API}?{params}", headers={"User-Agent": USER_AGENT})
-    last_error: Exception | None = None
-    for attempt in range(3):
+    try:
+        return download(f"{ARXIV_API}?{params}"), "Atom API"
+    except RuntimeError as api_error:
+        category_match = re.fullmatch(r"cat:([A-Za-z.-]+)", query.strip())
+        if not category_match:
+            raise RuntimeError(f"arXiv API failed and query has no RSS fallback: {api_error}") from api_error
+        category = category_match.group(1)
         try:
-            with urllib.request.urlopen(request, timeout=45) as response:
-                return response.read()
-        except (urllib.error.URLError, TimeoutError) as exc:
-            last_error = exc
-            if attempt < 2:
-                time.sleep(2**attempt)
-    raise RuntimeError(f"arXiv request failed after 3 attempts: {last_error}")
+            return download(f"{ARXIV_RSS}/{category}"), "RSS fallback"
+        except RuntimeError as rss_error:
+            raise RuntimeError(f"arXiv API and RSS fallback failed: {api_error}; {rss_error}") from rss_error
 
 
 def load_json(path: Path, default: Any) -> Any:
@@ -139,11 +200,11 @@ def main() -> int:
     seen = set(state.get("seen", []))
     now = parse_timestamp(args.now) if args.now else dt.datetime.now(dt.timezone.utc)
     cutoff = now - dt.timedelta(days=args.lookback_days)
-    payload = fetch_feed(profile.get("query", "cat:cs.RO"), args.max_results, args.feed_file)
+    payload, transport = fetch_feed(profile.get("query", "cat:cs.RO"), args.max_results, args.feed_file)
 
     candidates: list[dict[str, Any]] = []
     feed_ids: set[str] = set()
-    for paper in parse_feed(payload):
+    for paper in parse_feed(payload)[: args.max_results]:
         if paper["arxiv_id"] in feed_ids:
             continue
         feed_ids.add(paper["arxiv_id"])
@@ -160,6 +221,7 @@ def main() -> int:
         "generated_at": now.isoformat(),
         "cutoff": cutoff.isoformat(),
         "source": "arXiv",
+        "transport": transport,
         "query": profile.get("query", "cat:cs.RO"),
         "profile": profile.get("name", "unnamed"),
         "candidate_count": len(candidates),

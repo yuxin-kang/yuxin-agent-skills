@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <channel>
+    <title>cs.RO updates on arXiv.org</title>
+    <item>
+      <title>Depth-Aware Humanoid Stair Locomotion</title>
+      <link>https://arxiv.org/abs/2608.22345</link>
+      <description>arXiv:2608.22345v1 Announce Type: new Abstract: We learn a depth-conditioned humanoid locomotion policy for stair traversal.</description>
+      <guid isPermaLink="false">oai:arXiv.org:2608.22345v1</guid>
+      <category>cs.RO</category>
+      <category>cs.LG</category>
+      <pubDate>Wed, 12 Aug 2026 00:00:00 -0400</pubDate>
+      <arxiv:announce_type>new</arxiv:announce_type>
+      <dc:creator>Ada Robot, Bo Control</dc:creator>
+    </item>
+    <item>
+      <title>Safe Mobile Manipulation with Contact Feedback</title>
+      <link>https://arxiv.org/abs/2608.22346</link>
+      <description>arXiv:2608.22346v1 Announce Type: new Abstract: We study contact-aware mobile manipulation with a learned safety policy.</description>
+      <guid isPermaLink="false">oai:arXiv.org:2608.22346v1</guid>
+      <category>cs.RO</category>
+      <pubDate>Tue, 11 Aug 2026 00:00:00 -0400</pubDate>
+      <arxiv:announce_type>new</arxiv:announce_type>
+      <dc:creator>Chen Learning, Dana Safety</dc:creator>
+    </item>
+  </channel>
+</rss>

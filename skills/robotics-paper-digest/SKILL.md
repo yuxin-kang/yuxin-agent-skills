@@ -55,3 +55,6 @@ python3 scripts/render_digest.py \
 `render_digest.py` uses the OpenAI Responses API when `OPENAI_API_KEY` is present. Never print, commit, or persist that secret. Without a key, allow the extractive fallback only when the user accepts an abstract-level digest; interactive Codex usage should instead summarize the verified primary sources directly.
 
 The repository-level GitHub Actions workflow runs this pipeline every day and commits the resulting report.
+The fetcher prefers the arXiv Atom API and falls back to the official category RSS feed when shared CI IPs are
+rate-limited. Reports record which transport was used; RSS fallback covers the current announcement batch rather than
+guaranteeing the full lookback window.

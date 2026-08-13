@@ -24,7 +24,7 @@ cp -R skills/robotics-paper-digest ~/.codex/skills/
 
 仓库中的 [GitHub Actions 工作流](.github/workflows/daily-robotics-papers.yml) 每天北京时间 08:30 执行：
 
-1. 从 arXiv `cs.RO` 抓取最近 7 天的新论文；
+1. 从 arXiv `cs.RO` 抓取最近 7 天的新论文，API 限流时自动降级到官方 RSS 当日批次；
 2. 按人形、腿式运动、操作、强化学习、感知、sim-to-real 和安全等研究兴趣排序；
 3. 去重并生成 `reports/YYYY-MM-DD.md`；
 4. 自动更新 `data/seen_arxiv_ids.json` 和报告索引；

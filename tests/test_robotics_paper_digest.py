@@ -91,6 +91,31 @@ def main() -> int:
         )
         assert json.loads(second_pass.read_text(encoding="utf-8"))["selected_count"] == 0
 
+        rss_state = temp / "rss-seen.json"
+        rss_state.write_text('{"seen": [], "updated_at": null}\n', encoding="utf-8")
+        rss_papers = temp / "rss-papers.json"
+        run(
+            "python3",
+            str(SKILL / "scripts" / "fetch_arxiv.py"),
+            "--profile",
+            str(SKILL / "references" / "default-profile.json"),
+            "--state",
+            str(rss_state),
+            "--output",
+            str(rss_papers),
+            "--feed-file",
+            str(ROOT / "tests" / "fixtures" / "arxiv_rss_sample.xml"),
+            "--now",
+            "2026-08-13T00:00:00Z",
+            "--lookback-days",
+            "7",
+        )
+        rss_payload = json.loads(rss_papers.read_text(encoding="utf-8"))
+        assert rss_payload["selected_count"] == 2
+        assert rss_payload["papers"][0]["arxiv_id"] == "2608.22345"
+        assert rss_payload["papers"][0]["authors"] == ["Ada Robot", "Bo Control"]
+        assert rss_payload["papers"][0]["abstract"].startswith("We learn a depth-conditioned")
+
     print("robotics-paper-digest tests passed")
     return 0
 

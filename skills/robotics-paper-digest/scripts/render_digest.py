@@ -87,7 +87,7 @@ def generate_with_openai(data: dict[str, Any], api_key: str, model: str) -> str:
     )
     prompt = (
         f"生成时间：{data.get('generated_at')}\n"
-        f"检索来源：{data.get('source')} / {data.get('query')}\n"
+        f"检索来源：{data.get('source')} / {data.get('query')} / {data.get('transport', '未记录')}\n"
         f"研究配置：{data.get('profile')}\n"
         f"候选数：{data.get('candidate_count')}，入选数：{data.get('selected_count')}\n\n"
         f"论文：\n{paper_payload(data)}"
@@ -120,7 +120,7 @@ def render_extractive(data: dict[str, Any]) -> str:
         f"# 机器人论文日报｜{report_date}",
         "",
         "> 模式：摘要级证据抽取（未配置或未成功调用模型）；以下内容不代替全文精读。",
-        f"> 来源：{data.get('source')} `{data.get('query')}`；入选 {len(papers)} 篇。",
+        f"> 来源：{data.get('source')} `{data.get('query')}` / {data.get('transport', '未记录')}；入选 {len(papers)} 篇。",
         "",
         "## 今日概览",
         "",
@@ -172,7 +172,8 @@ def normalize_model_report(report: str, date: str, data: dict[str, Any], model: 
     else:
         lines = [heading, "", *lines]
     evidence = (
-        f"> 生成模式：OpenAI Responses API / `{model}`；来源：{data.get('source')} `{data.get('query')}`。"
+        f"> 生成模式：OpenAI Responses API / `{model}`；来源：{data.get('source')} "
+        f"`{data.get('query')}` / {data.get('transport', '未记录')}。"
         "详细方法与实验主张仍需回到论文全文核验。"
     )
     lines[1:1] = ["", evidence]

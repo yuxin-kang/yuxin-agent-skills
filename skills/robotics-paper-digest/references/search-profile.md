@@ -9,7 +9,12 @@ Use sources in this order:
 3. official author project page and repository;
 4. institutional news or company blog, labeled as non-paper evidence.
 
-The bundled daily job searches arXiv `cs.RO`. For deeper manual research, also inspect relevant official venue pages for RSS, ICRA, IROS, CoRL, Humanoids, RA-L, T-RO and Science Robotics. Cross-listed `cs.AI`, `cs.CV` and `cs.LG` papers should enter only when the paper itself is materially about robots.
+The bundled daily job searches arXiv `cs.RO`. It uses the Atom API when available and the official category RSS feed
+when shared CI IPs are rate-limited. The RSS feed is a current announcement batch, so after a multi-day automation
+outage, run an explicit API/manual backfill instead of assuming the RSS fallback covered the full lookback window. For
+deeper manual research, also inspect relevant official venue pages for RSS, ICRA, IROS, CoRL, Humanoids, RA-L, T-RO
+and Science Robotics. Cross-listed `cs.AI`, `cs.CV` and `cs.LG` papers should enter only when the paper itself is
+materially about robots.
 
 ## Ranking
 
