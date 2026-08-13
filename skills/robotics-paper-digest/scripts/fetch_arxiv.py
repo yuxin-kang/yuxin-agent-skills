@@ -18,7 +18,7 @@ from typing import Any
 
 ARXIV_API = "https://export.arxiv.org/api/query"
 ATOM = {"atom": "http://www.w3.org/2005/Atom"}
-USER_AGENT = "yuxin-agent-skills/robotics-paper-digest (+https://github.com/yuxin-kang/experiment-record-skill)"
+USER_AGENT = "yuxin-agent-skills/robotics-paper-digest (+https://github.com/yuxin-kang/yuxin-agent-skills)"
 
 
 def parse_args() -> argparse.Namespace:
