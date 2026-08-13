@@ -1,0 +1,39 @@
+{
+  "name": "humanoid-robot-learning",
+  "description": "Broad robotics coverage with priority for humanoid and learned whole-body control.",
+  "query": "cat:cs.RO",
+  "priority_keywords": {
+    "humanoid": 10,
+    "biped": 8,
+    "legged": 7,
+    "locomotion": 7,
+    "loco-manipulation": 10,
+    "whole-body": 8,
+    "foothold": 7,
+    "stair": 7,
+    "terrain": 5,
+    "manipulation": 5,
+    "reinforcement learning": 5,
+    "imitation learning": 4,
+    "sim-to-real": 6,
+    "teacher-student": 5,
+    "depth": 4,
+    "rgb-d": 4,
+    "vision-language-action": 5,
+    "world model": 4,
+    "safety": 3,
+    "contact": 3
+  },
+  "secondary_keywords": {
+    "robot": 1,
+    "policy": 1,
+    "control": 1,
+    "perception": 1,
+    "navigation": 1,
+    "embodied": 2,
+    "dexterous": 2,
+    "teleoperation": 2,
+    "diffusion": 2,
+    "transformer": 1
+  }
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>http://arxiv.org/abs/2608.12345v1</id>
+    <updated>2026-08-12T12:00:00Z</updated>
+    <published>2026-08-12T12:00:00Z</published>
+    <title>Depth Memory for Humanoid Stair Loco-Manipulation</title>
+    <summary>We study humanoid locomotion while carrying objects on stairs. A recurrent depth policy preserves terrain evidence under occlusion.</summary>
+    <author><name>Ada Robot</name></author>
+    <category term="cs.RO"/>
+    <link href="https://arxiv.org/abs/2608.12345" rel="alternate" type="text/html"/>
+    <link title="pdf" href="https://arxiv.org/pdf/2608.12345" rel="related" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2608.12346v2</id>
+    <updated>2026-08-12T10:00:00Z</updated>
+    <published>2026-08-10T10:00:00Z</published>
+    <title>Planning for Warehouse Mobile Robots</title>
+    <summary>We present a navigation and planning system for mobile robots in warehouses.</summary>
+    <author><name>Grace Planner</name></author>
+    <category term="cs.RO"/>
+    <link href="https://arxiv.org/abs/2608.12346" rel="alternate" type="text/html"/>
+  </entry>
+</feed>

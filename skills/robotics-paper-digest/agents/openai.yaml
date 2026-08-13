@@ -1,0 +1,4 @@
+interface:
+  display_name: "Robotics Paper Digest"
+  short_description: "Track and summarize new robotics papers daily"
+  default_prompt: "Use $robotics-paper-digest to find and summarize the latest robotics papers relevant to my research."
