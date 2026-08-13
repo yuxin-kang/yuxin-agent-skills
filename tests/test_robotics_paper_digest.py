@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "skills" / "robotics-paper-digest"
+SKILL = ROOT / "robotics-paper-digest"
 
 
 def run(*args: str) -> None:
@@ -46,10 +46,9 @@ def main() -> int:
             str(duplicate_feed),
             "--now",
             "2026-08-13T00:00:00Z",
-            "--lookback-days",
-            "7",
         )
         payload = json.loads(papers.read_text(encoding="utf-8"))
+        assert payload["cutoff"].startswith("2026-08-10")
         assert payload["candidate_count"] == 2
         assert payload["selected_count"] == 2
         assert payload["papers"][0]["arxiv_id"] == "2608.12345"

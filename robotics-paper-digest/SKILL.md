@@ -9,7 +9,7 @@ Produce an evidence-bounded robotics paper digest rather than a list of titles.
 
 ## Workflow
 
-1. Define the date window and research focus. Default to the last 7 days and the profile in [default-profile.json](references/default-profile.json).
+1. Define the date window and research focus. Default to the last 3 days and the profile in [default-profile.json](references/default-profile.json). Use the user-provided day count when supplied.
 2. Run `scripts/fetch_arxiv.py` for a reproducible arXiv `cs.RO` sweep. For an exhaustive or venue-specific request, additionally search official proceedings, OpenReview, publisher pages, and author project pages.
 3. Deduplicate by stable arXiv ID, DOI, or exact title. Treat revisions as updates to an existing paper unless the user explicitly asks for version changes.
 4. Rank candidates by topical relevance, then inspect every high-priority paper through its primary abstract/full-text page before making detailed claims.
@@ -22,7 +22,7 @@ Produce an evidence-bounded robotics paper digest rather than a list of titles.
    - evidence limitations;
    - relation to the user's current project.
 6. Use the structure in [report-schema.md](references/report-schema.md). Keep facts from the paper separate from your inference.
-7. Save recurring reports as `reports/YYYY-MM-DD.md` and update the seen-ID state only after the report is written successfully.
+7. Save reports and seen-ID state only to a local, git-ignored path. Update the state only after the report is written successfully. Never commit or upload generated paper data unless the user explicitly asks.
 
 ## Evidence Rules
 
@@ -39,22 +39,25 @@ Produce an evidence-bounded robotics paper digest rather than a list of titles.
 Use the deterministic scripts for recurring runs:
 
 ```bash
-python3 scripts/fetch_arxiv.py \
-  --profile references/default-profile.json \
-  --state ../../data/seen_arxiv_ids.json \
-  --output /tmp/robotics-papers.json
+mkdir -p .local-data/robotics-paper-digest .local-output/robotics-paper-digest
 
-python3 scripts/render_digest.py \
-  --input /tmp/robotics-papers.json \
-  --output ../../reports/$(date +%F).md \
-  --state ../../data/seen_arxiv_ids.json \
-  --index ../../reports/README.md \
+python3 robotics-paper-digest/scripts/fetch_arxiv.py \
+  --profile robotics-paper-digest/references/default-profile.json \
+  --state .local-data/robotics-paper-digest/seen.json \
+  --output .local-data/robotics-paper-digest/papers.json
+
+python3 robotics-paper-digest/scripts/render_digest.py \
+  --input .local-data/robotics-paper-digest/papers.json \
+  --output .local-output/robotics-paper-digest/$(date +%F).md \
+  --state .local-data/robotics-paper-digest/seen.json \
   --allow-extractive-fallback
 ```
 
 `render_digest.py` uses the OpenAI Responses API when `OPENAI_API_KEY` is present. Never print, commit, or persist that secret. Without a key, allow the extractive fallback only when the user accepts an abstract-level digest; interactive Codex usage should instead summarize the verified primary sources directly.
 
-The repository-level GitHub Actions workflow runs this pipeline every day and commits the resulting report.
+The repository-level GitHub Actions workflow runs this pipeline every day. It keeps generated files in the runner's
+temporary local directory and exposes the digest only in the workflow run summary; it does not commit reports, state,
+or paper metadata. Manual runs provide a text box for overriding the default 3-day lookback.
 The fetcher prefers the arXiv Atom API and falls back to the official category RSS feed when shared CI IPs are
 rate-limited. Reports record which transport was used; RSS fallback covers the current announcement batch rather than
 guaranteeing the full lookback window.

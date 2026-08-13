@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--profile", type=Path, required=True)
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--lookback-days", type=int, default=7)
+    parser.add_argument("--lookback-days", type=int, default=3)
     parser.add_argument("--max-results", type=int, default=100)
     parser.add_argument("--max-papers", type=int, default=20)
     parser.add_argument("--include-seen", action="store_true")

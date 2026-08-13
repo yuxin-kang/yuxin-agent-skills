@@ -6,16 +6,17 @@ on:
   workflow_dispatch:
     inputs:
       lookback_days:
-        description: Days to inspect on arXiv
+        description: Days to inspect on arXiv (enter another value when needed)
         required: false
-        default: "7"
+        default: "3"
+        type: string
       max_papers:
         description: Maximum new papers in the digest
         required: false
         default: "20"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: daily-robotics-paper-digest
@@ -25,7 +26,7 @@ jobs:
   digest:
     runs-on: ubuntu-latest
     env:
-      LOOKBACK_DAYS: ${{ github.event.inputs.lookback_days || '7' }}
+      LOOKBACK_DAYS: ${{ github.event.inputs.lookback_days || '3' }}
       MAX_PAPERS: ${{ github.event.inputs.max_papers || '20' }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-5-mini' }}
@@ -41,32 +42,26 @@ jobs:
 
       - name: Fetch recent robotics papers
         run: |
-          mkdir -p .cache reports data
-          python3 skills/robotics-paper-digest/scripts/fetch_arxiv.py \
-            --profile skills/robotics-paper-digest/references/default-profile.json \
-            --state data/seen_arxiv_ids.json \
+          runtime_dir="$RUNNER_TEMP/robotics-paper-digest"
+          mkdir -p "$runtime_dir"
+          printf '{"seen": [], "updated_at": null}\n' > "$runtime_dir/seen.json"
+          python3 robotics-paper-digest/scripts/fetch_arxiv.py \
+            --profile robotics-paper-digest/references/default-profile.json \
+            --state "$runtime_dir/seen.json" \
             --lookback-days "$LOOKBACK_DAYS" \
             --max-papers "$MAX_PAPERS" \
-            --output .cache/papers.json
+            --output "$runtime_dir/papers.json"
 
       - name: Render Chinese digest
         run: |
-          python3 skills/robotics-paper-digest/scripts/render_digest.py \
-            --input .cache/papers.json \
-            --output "reports/$(date -u +%F).md" \
-            --state data/seen_arxiv_ids.json \
-            --index reports/README.md \
+          runtime_dir="$RUNNER_TEMP/robotics-paper-digest"
+          python3 robotics-paper-digest/scripts/render_digest.py \
+            --input "$runtime_dir/papers.json" \
+            --output "$runtime_dir/report.md" \
+            --state "$runtime_dir/seen.json" \
             --model "$OPENAI_MODEL" \
             --allow-extractive-fallback
 
-      - name: Commit daily report
+      - name: Show digest in the run summary
         run: |
-          git config user.name "robotics-paper-bot"
-          git config user.email "robotics-paper-bot@users.noreply.github.com"
-          git add reports data/seen_arxiv_ids.json
-          if git diff --cached --quiet; then
-            echo "No report changes to commit."
-            exit 0
-          fi
-          git commit -m "Add robotics paper digest $(date -u +%F)"
-          git push
+          cat "$RUNNER_TEMP/robotics-paper-digest/report.md" >> "$GITHUB_STEP_SUMMARY"
