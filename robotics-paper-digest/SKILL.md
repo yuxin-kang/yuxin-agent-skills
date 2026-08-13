@@ -36,28 +36,25 @@ Produce an evidence-bounded robotics paper digest rather than a list of titles.
 
 ## Bundled Automation
 
-Use the deterministic scripts for recurring runs:
+Use the local runner for recurring or manual runs. It defaults to the latest 3 days; when the user enters another day
+count in the prompt, pass that value through `--lookback-days`.
 
 ```bash
-mkdir -p .local-data/robotics-paper-digest .local-output/robotics-paper-digest
+python3 robotics-paper-digest/scripts/run_local_digest.py
+python3 robotics-paper-digest/scripts/run_local_digest.py --lookback-days 7
+```
 
-python3 robotics-paper-digest/scripts/fetch_arxiv.py \
-  --profile robotics-paper-digest/references/default-profile.json \
-  --state .local-data/robotics-paper-digest/seen.json \
-  --output .local-data/robotics-paper-digest/papers.json
+Install the default local schedule (daily at 08:30 system-local time, 3-day lookback) with:
 
-python3 robotics-paper-digest/scripts/render_digest.py \
-  --input .local-data/robotics-paper-digest/papers.json \
-  --output .local-output/robotics-paper-digest/$(date +%F).md \
-  --state .local-data/robotics-paper-digest/seen.json \
-  --allow-extractive-fallback
+```bash
+python3 robotics-paper-digest/scripts/install_local_schedule.py
 ```
 
 `render_digest.py` uses the OpenAI Responses API when `OPENAI_API_KEY` is present. Never print, commit, or persist that secret. Without a key, allow the extractive fallback only when the user accepts an abstract-level digest; interactive Codex usage should instead summarize the verified primary sources directly.
 
-The repository-level GitHub Actions workflow runs this pipeline every day. It keeps generated files in the runner's
-temporary local directory and exposes the digest only in the workflow run summary; it does not commit reports, state,
-or paper metadata. Manual runs provide a text box for overriding the default 3-day lookback.
+This repository intentionally contains no GitHub Actions workflow. Recurring execution must use a local scheduler, and
+all generated metadata, state, reports, and logs must remain under the git-ignored `.local-data/` and `.local-output/`
+directories unless the user explicitly chooses another local path.
 The fetcher prefers the arXiv Atom API and falls back to the official category RSS feed when shared CI IPs are
 rate-limited. Reports record which transport was used; RSS fallback covers the current announcement batch rather than
 guaranteeing the full lookback window.

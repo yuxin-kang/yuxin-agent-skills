@@ -115,6 +115,40 @@ def main() -> int:
         assert rss_payload["papers"][0]["authors"] == ["Ada Robot", "Bo Control"]
         assert rss_payload["papers"][0]["abstract"].startswith("We learn a depth-conditioned")
 
+        local_data = temp / "local-data"
+        local_output = temp / "local-output"
+        run(
+            "python3",
+            str(SKILL / "scripts" / "run_local_digest.py"),
+            "--data-dir",
+            str(local_data),
+            "--output-dir",
+            str(local_output),
+            "--feed-file",
+            str(ROOT / "tests" / "fixtures" / "arxiv_sample.xml"),
+            "--now",
+            "2026-08-13T00:00:00Z",
+        )
+        local_report = local_output / "2026-08-13.md"
+        assert local_report.exists()
+        assert "Depth Memory for Humanoid Stair Loco-Manipulation" in local_report.read_text(encoding="utf-8")
+        assert (local_data / "seen.json").exists()
+
+        schedule = subprocess.run(
+            [
+                "python3",
+                str(SKILL / "scripts" / "install_local_schedule.py"),
+                "--dry-run",
+            ],
+            cwd=ROOT,
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout
+        assert schedule.startswith("# BEGIN yuxin-agent-skills robotics-paper-digest")
+        assert "30 8 * * *" in schedule
+        assert "--lookback-days 3" in schedule
+
     print("robotics-paper-digest tests passed")
     return 0
 

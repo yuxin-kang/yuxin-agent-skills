@@ -196,7 +196,7 @@ def update_index(path: Path, reports_dir: Path) -> None:
     lines = [
         "# Robotics Paper Digests",
         "",
-        "每日机器人论文简报由 GitHub Actions 自动生成。",
+        "每日机器人论文简报由本地定时任务自动生成。",
         "",
         "## Reports",
         "",
